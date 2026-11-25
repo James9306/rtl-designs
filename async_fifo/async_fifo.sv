@@ -4,15 +4,15 @@ module async_fifo #(
 	parameter DATA_WIDTH = 8,
 	parameter DEPTH = 16
 )(
-	input logic i_wr_clk,
-	input logic i_rst, // synchronous to write clock
-	input logic [DATA_WIDTH-1:0] i_wr_data,
-	input logic i_wr_en,
-	input logic i_rd_clk,
-	input logic i_rd_en,
+	input  logic                  i_wr_clk,
+	input  logic                  i_rst, // synchronous to write clock
+	input  logic [DATA_WIDTH-1:0] i_wr_data,
+	input  logic                  i_wr_en,
+	input  logic 				  i_rd_clk,
+	input  logic 				  i_rd_en,
 	output logic [DATA_WIDTH-1:0] o_rd_data,
-	output logic empty,
-	output logic full
+	output logic                  o_empty,
+	output logic                  o_full
 );
 
 	localparam ADDR_WIDTH = $clog2(DEPTH);
@@ -63,7 +63,7 @@ module async_fifo #(
 		if (i_rst) begin 
 			wr_ptr <= 0;
 		end else begin 
-			if (i_wr_en && !full) begin
+			if (i_wr_en && !o_full) begin
 				mem[wr_ptr[ADDR_WIDTH-1:0]] <= i_wr_data;
 				wr_ptr <= wr_ptr + 1;
 			end
@@ -76,15 +76,15 @@ module async_fifo #(
 			rd_ptr <= 0;
 			o_rd_data <= 0;
 		end else begin 
-			if (i_rd_en && !empty) begin
+			if (i_rd_en && !o_empty) begin
 				o_rd_data <= mem[rd_ptr[ADDR_WIDTH-1:0]];
 				rd_ptr <= rd_ptr + 1;
 			end
 		end
 	end
 	
-	assign empty = (rd_ptr_gray == wr_ptr_gray_sync);
-	assign full = (wr_ptr_gray == {
+	assign o_empty = (rd_ptr_gray == wr_ptr_gray_sync);
+	assign o_full = (wr_ptr_gray == {
 								~rd_ptr_gray_sync[ADDR_WIDTH:ADDR_WIDTH-1],
 						     rd_ptr_gray_sync[ADDR_WIDTH-2:0]});
 	
